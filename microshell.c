@@ -5,8 +5,8 @@
 #include <sys/wait.h>
 
 # define STDIN		0
-# define STDOUT		1
-# define STDERR		2
+# define STDOUT	1
+# define STDERR	2
 
 # define TYPE_END	3
 # define TYPE_PIPE	4
