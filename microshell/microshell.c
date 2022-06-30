@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-# define STDIN		0
+# define STDIN	0
 # define STDOUT	1
 # define STDERR	2
 
@@ -57,14 +57,14 @@ char	*ft_strdup(char *str)
 void	exit_fatal(void)
 {
 	write(STDERR, "error: fatal\n", ft_strlen("error: fatal\n"));
-	exit(EXIT_FAILURE);
+	exit(1);
 }
 
 int	exit_cd_arg()
 {
 	write(STDERR, "error: cd: bad arguments\n",
 			ft_strlen("error: cd: bad arguments\n"));
-	return (EXIT_FAILURE);
+	return (1);
 }
 
 int	exit_cd_path(char *str)
@@ -73,7 +73,7 @@ int	exit_cd_path(char *str)
 			ft_strlen("error: cd: cannot change directory to \n"));
 	write(STDERR, str, ft_strlen(str));
 	write(STDERR, "\n", 1);
-	return (EXIT_FAILURE);
+	return (1);
 }
 
 int	exit_exec(char *str)
@@ -82,7 +82,7 @@ int	exit_exec(char *str)
 			ft_strlen("error: cannot execute "));
 	write(STDERR, str, ft_strlen(str));
 	write(STDERR, "\n", 1);
-	return (EXIT_FAILURE);
+	return (1);
 }
 
 /* parsing */
@@ -168,14 +168,14 @@ void	ft_exec(t_data *temp, char **env)
 	else if (pid == 0)	//child
 	{
 		if (temp->type == TYPE_PIPE
-				&& dup2(temp->fd[STDOUT], STDOUT) < 0)
+				&& (dup2(temp->fd[STDOUT], STDOUT) < 0))
 			exit_fatal();
 		if (temp->prev && temp->prev->type == TYPE_PIPE
-				&& dup2(temp->prev->fd[STDIN], STDIN) < 0)
+				&& (dup2(temp->prev->fd[STDIN], STDIN) < 0))
 			exit_fatal();
 		if ((execve(temp->argv[0], temp->argv, env)) < 0)
 			exit_exec(temp->argv[0]);
-		exit(EXIT_SUCCESS);
+		exit(0);
 	}
 	else		//parent
 	{
