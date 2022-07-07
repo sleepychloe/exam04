@@ -4,13 +4,13 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-# define STDIN	0
-# define STDOUT	1
-# define STDERR	2
+# define	STDIN	0
+# define	STDOUT	1
+# define	STDERR	2
 
-# define TYPE_END	3
-# define TYPE_PIPE	4
-# define TYPE_BREAK	5
+# define	TYPE_END	3
+# define	TYPE_PIPE	4
+# define	TYPE_BREAK	5
 
 typedef struct	s_data
 {
@@ -54,20 +54,20 @@ char	*ft_strdup(char *str)
 
 /* error */
 
-void	exit_fatal(void)
+void	err_fatal(void)
 {
 	write(STDERR, "error: fatal\n", ft_strlen("error: fatal\n"));
 	exit(1);
 }
 
-int	exit_cd_arg()
+int	err_cd_arg(void)
 {
 	write(STDERR, "error: cd: bad arguments\n",
 			ft_strlen("error: cd: bad arguments\n"));
 	return (1);
 }
 
-int	exit_cd_path(char *str)
+int	err_cd_path(char *str)
 {
 	write(STDERR, "error: cd: cannot change directory to ",
 			ft_strlen("error: cd: cannot change directory to \n"));
@@ -76,7 +76,7 @@ int	exit_cd_path(char *str)
 	return (1);
 }
 
-int	exit_exec(char *str)
+int	err_exec(char *str)
 {
 	write(STDERR, "error: cannot execute ",
 			ft_strlen("error: cannot execute "));
@@ -108,8 +108,7 @@ int	size_of_argv(char **argv)
 	int	i;
 
 	i = 0;
-	while (argv[i] && strcmp(argv[i], "|") != 0
-				&& strcmp(argv[i], ";") != 0)
+	while (argv[i] && strcmp(argv[i], "|") != 0 && strcmp(argv[i], ";") != 0)
 		i++;
 	return (i);
 }
@@ -132,9 +131,9 @@ int	parse_argv(t_data **ptr, char **argv)
 
 	size = size_of_argv(argv);
 	if (!(new = (t_data *)malloc(sizeof(t_data))))
-		exit_fatal();
+		err_fatal();
 	if (!(new->argv = (char **)malloc(sizeof(char *) * (size + 1))))
-		exit_fatal();
+		err_fatal();
 	new->size = size;
 	new->prev = NULL;
 	new->next = NULL;
@@ -152,35 +151,35 @@ void	ft_exec(t_data *temp, char **env)
 {
 	pid_t	pid;
 	int	status;
-	int	pipe_open;
+	int	pipe_flag;
 
-	pipe_open = 0;
+	pipe_flag = 0;
 	if (temp->type == TYPE_PIPE
 			|| (temp->prev && temp->prev->type == TYPE_PIPE))
 	{
-		pipe_open = 1;
+		pipe_flag = 1;
 		if (pipe(temp->fd))
-			exit_fatal();
+			err_fatal();
 	}
 	pid = fork();
 	if (pid < 0)
-		exit_fatal();
+		err_fatal();
 	else if (pid == 0)	//child
 	{
 		if (temp->type == TYPE_PIPE
 				&& (dup2(temp->fd[STDOUT], STDOUT) < 0))
-			exit_fatal();
+			err_fatal();
 		if (temp->prev && temp->prev->type == TYPE_PIPE
 				&& (dup2(temp->prev->fd[STDIN], STDIN) < 0))
-			exit_fatal();
+			err_fatal();
 		if ((execve(temp->argv[0], temp->argv, env)) < 0)
-			exit_exec(temp->argv[0]);
+			err_exec(temp->argv[0]);
 		exit(0);
 	}
 	else		//parent
 	{
 		waitpid(pid, &status, 0);
-		if (pipe_open)
+		if (pipe_flag == 1)
 		{
 			close(temp->fd[STDOUT]);
 			if (!temp->next || temp->type == TYPE_BREAK)
@@ -200,10 +199,10 @@ void	exec_cmds(t_data *ptr, char **env)
 	{
 		if (strcmp("cd", temp->argv[0]) == 0)
 		{
-			if (temp->size < 2)
-				exit_cd_arg();
+			if (temp->size != 2)
+				err_cd_arg();
 			else if (chdir(temp->argv[1]))
-				exit_cd_path(temp->argv[1]);
+				err_cd_path(temp->argv[1]);
 		}
 		else
 			ft_exec(temp, env);
